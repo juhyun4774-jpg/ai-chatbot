@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hello Vibe Coding</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at top, #2b2b52, #0f0f1a 55%, #050508 100%);
+        color: #f7f7ff;
+      }
+
+      .card {
+        padding: 2.5rem 4rem;
+        border-radius: 2rem;
+        backdrop-filter: blur(18px);
+        background-color: rgba(15, 15, 30, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 25px 60px rgba(5, 5, 8, 0.65);
+        text-align: center;
+      }
+
+      .title {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #e3e1ff;
+      }
+
+      .glow {
+        position: absolute;
+        width: 340px;
+        height: 340px;
+        background: radial-gradient(circle, rgba(147, 164, 255, 0.45), transparent 70%);
+        z-index: -1;
+        filter: blur(6px);
+      }
+
+      .glow.one {
+        top: 15%;
+        left: 20%;
+      }
+
+      .glow.two {
+        bottom: 10%;
+        right: 15%;
+        background: radial-gradient(circle, rgba(255, 133, 173, 0.45), transparent 70%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glow one"></div>
+    <div class="glow two"></div>
+    <div class="card">
+      <h1 class="title">Hello Vibe Coding</h1>
+    </div>
+  </body>
+</html>
