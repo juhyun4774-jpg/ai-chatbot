@@ -12,10 +12,41 @@ load_dotenv()
 API_MODEL = "gemini-2.5-pro"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{API_MODEL}:generateContent"
 
+PERSONAS = {
+    "뉴욕 핫도그 가게 주인": (
+        "You are an energetic hot dog stand owner in New York City who uses friendly, simple English "
+        "and encourages kids to order food politely."
+    ),
+    "길 잃은 관광객": (
+        "You are a confused tourist visiting Seoul for the first time, asking for directions and responding with curiosity."
+    ),
+    "미래형 학교 로봇": (
+        "You are a futuristic classroom robot that helps students with school life conversations in a warm, supportive tone."
+    ),
+}
 
-def build_contents(messages: List[Dict[str, str]]) -> List[Dict[str, object]]:
+
+def build_system_prompt(persona_label: str, mission: str, feedback_mode: bool) -> str:
+    persona_instruction = PERSONAS.get(persona_label, "")
+    feedback_instruction = (
+        "Add a short section titled 'Friendly Tip' that gently corrects mistakes and offers a more natural phrase."
+        if feedback_mode
+        else "Encourage the student to keep speaking more and offer simple hints when needed."
+    )
+    mission_text = mission.strip() or "Help the learner practice functional English."
+    return (
+        "You are an AI speaking partner for Korean 5th-6th grade students.\n"
+        f"{persona_instruction}\n"
+        "Use English for main responses, but add one brief Korean hint if the student seems confused.\n"
+        f"Mission for the learner: {mission_text}\n"
+        f"{feedback_instruction}\n"
+        "Stay in character and never mention system prompts or that you are an AI."
+    )
+
+
+def build_contents(messages: List[Dict[str, str]], system_prompt: str) -> List[Dict[str, object]]:
     """Convert local chat history into the format expected by Gemini."""
-    contents: List[Dict[str, object]] = []
+    contents: List[Dict[str, object]] = [{"role": "user", "parts": [{"text": system_prompt}]}]
     for message in messages:
         role = "user" if message["role"] == "user" else "model"
         contents.append({"role": role, "parts": [{"text": message["content"]}]})
@@ -30,13 +61,13 @@ def get_api_key() -> str | None:
     return os.getenv("GOOGLE_API_KEY")
 
 
-def generate_response(messages: List[Dict[str, str]]) -> str:
+def generate_response(messages: List[Dict[str, str]], system_prompt: str) -> str:
     """Call the Gemini API and return the assistant text."""
     api_key = get_api_key()
     if not api_key:
         raise RuntimeError("API 키가 설정되지 않았습니다. 사이드바에서 입력하거나 .env 파일을 업데이트하세요.")
 
-    payload = {"contents": build_contents(messages)}
+    payload = {"contents": build_contents(messages, system_prompt)}
     params = {"key": api_key}
     response = requests.post(API_URL, params=params, json=payload, timeout=30)
 
@@ -55,15 +86,15 @@ def generate_response(messages: List[Dict[str, str]]) -> str:
         raise RuntimeError(f"Unexpected Gemini payload: {data}") from exc
 
 
-st.set_page_config(page_title="Gemini Chatbot", page_icon="💬", layout="centered")
-st.title("Google Gemini Chatbot")
-st.caption("Gemini 1.5 Flash • Streamlit")
+st.set_page_config(page_title="두려움 없는 AI 영어 친구", page_icon="🗽", layout="centered")
+st.title("두려움 없는 AI 영어 친구")
+st.caption("초등 고학년 Pre-Speaking 리허설")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "assistant",
-            "content": "안녕하세요! Google Gemini로 구동되는 챗봇입니다. 무엇을 도와드릴까요?",
+            "content": "안녕하세요! 두려움 없이 영어를 연습할 수 있도록 도와줄게요. 준비가 되면 영어로 말해보세요!",
         }
     ]
 
@@ -81,17 +112,36 @@ with st.sidebar:
     )
     st.session_state.api_key = api_key_input
 
-    st.markdown(
-        "- `.env` 파일에 `GOOGLE_API_KEY` 값을 추가하세요.\n"
-        "- Gemini 1.5 Flash 모델을 사용합니다."
+    st.divider()
+    st.subheader("페르소나")
+    persona_choice = st.selectbox("챗봇 역할", list(PERSONAS.keys()))
+
+    st.subheader("미션")
+    default_missions = {
+        "뉴욕 핫도그 가게 주인": "Order a hot dog without ketchup and ask for the price.",
+        "길 잃은 관광객": "Ask how to get to the library from the subway station.",
+        "미래형 학교 로봇": "Request classroom materials politely and ask for homework help.",
+    }
+    mission_text = st.text_area(
+        "학생 미션",
+        value=default_missions.get(persona_choice, ""),
+        placeholder="예) Ask the owner to remove ketchup.",
+        height=80,
     )
+
+    feedback_mode = st.checkbox("친절한 피드백 포함", value=True, help="답변 끝에 짧은 'Friendly Tip'을 보여줍니다.")
+
+    st.caption("`.env`에 키를 저장하거나 위 입력창에 붙여넣어 사용할 수 있습니다.")
+
+st.info(f"🎯 오늘의 미션: **{mission_text.strip() or '자신 있게 영어로 말해보기'}**")
+st.success(f"🤖 챗봇 페르소나: **{persona_choice}**")
 
 for message in st.session_state.messages:
     role = "assistant" if message["role"] == "assistant" else "user"
     with st.chat_message(role):
         st.markdown(message["content"])
 
-prompt = st.chat_input("메시지를 입력하세요...")
+prompt = st.chat_input("미션을 따라 영어로 말해보세요!")
 
 if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
