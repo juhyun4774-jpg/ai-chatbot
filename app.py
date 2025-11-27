@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini1.5-flash:generateContent"
+API_MODEL = "gemini-2.5-pro"
+API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{API_MODEL}:generateContent"
 
 
 def build_contents(messages: List[Dict[str, str]]) -> List[Dict[str, object]]:
