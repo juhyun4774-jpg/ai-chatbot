@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import List, Dict
+from typing import Dict, List
 
 import requests
 import streamlit as st
@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_KEY = os.getenv("GOOGLE_API_KEY")
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini1.5-flash:generateContent"
 
 
@@ -22,13 +21,22 @@ def build_contents(messages: List[Dict[str, str]]) -> List[Dict[str, object]]:
     return contents
 
 
+def get_api_key() -> str | None:
+    """Return the active API key from session state or fallback to env."""
+    session_key = st.session_state.get("api_key")
+    if session_key:
+        return session_key.strip()
+    return os.getenv("GOOGLE_API_KEY")
+
+
 def generate_response(messages: List[Dict[str, str]]) -> str:
     """Call the Gemini API and return the assistant text."""
-    if not API_KEY:
-        raise RuntimeError("GOOGLE_API_KEY is not set. Update your .env file.")
+    api_key = get_api_key()
+    if not api_key:
+        raise RuntimeError("API 키가 설정되지 않았습니다. 사이드바에서 입력하거나 .env 파일을 업데이트하세요.")
 
     payload = {"contents": build_contents(messages)}
-    params = {"key": API_KEY}
+    params = {"key": api_key}
     response = requests.post(API_URL, params=params, json=payload, timeout=30)
 
     if not response.ok:
@@ -60,6 +68,18 @@ if "messages" not in st.session_state:
 
 with st.sidebar:
     st.header("환경 설정")
+    if "api_key" not in st.session_state:
+        st.session_state.api_key = os.getenv("GOOGLE_API_KEY", "")
+
+    api_key_input = st.text_input(
+        "Google API Key",
+        type="password",
+        value=st.session_state.api_key,
+        placeholder="AIza...",
+        help="일시적으로 키를 입력하면 세션에만 저장되고 브라우저를 새로고침하면 초기화됩니다.",
+    )
+    st.session_state.api_key = api_key_input
+
     st.markdown(
         "- `.env` 파일에 `GOOGLE_API_KEY` 값을 추가하세요.\n"
         "- Gemini 1.5 Flash 모델을 사용합니다."
