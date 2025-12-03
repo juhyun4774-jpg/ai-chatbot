@@ -148,9 +148,10 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    with st.spinner("Gemini가 답변을 작성하고 있습니다..."):
+    with st.spinner("AI 친구가 생각하는 중..."):
         try:
-            reply = generate_response(st.session_state.messages)
+            system_prompt = build_system_prompt(persona_choice, mission_text, feedback_mode)
+            reply = generate_response(st.session_state.messages, system_prompt)
         except Exception as error:  # noqa: BLE001
             st.error(str(error))
         else:
