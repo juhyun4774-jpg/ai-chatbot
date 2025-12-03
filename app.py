@@ -102,10 +102,15 @@ with st.sidebar:
     st.header("환경 설정")
     if "api_key" not in st.session_state:
         st.session_state.api_key = os.getenv("GOOGLE_API_KEY", "")
+    if "show_api_key" not in st.session_state:
+        st.session_state.show_api_key = False
+
+    show_key = st.checkbox("API 키 보기", value=st.session_state.show_api_key)
+    st.session_state.show_api_key = show_key
 
     api_key_input = st.text_input(
         "Google API Key",
-        type="password",
+        type="password" if not show_key else "default",
         value=st.session_state.api_key,
         placeholder="AIza...",
         help="일시적으로 키를 입력하면 세션에만 저장되고 브라우저를 새로고침하면 초기화됩니다.",
